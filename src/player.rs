@@ -1,4 +1,6 @@
 use crate::bullet::spawn_bullet;
+use crate::constants::{PLAYER_SIZE, PLAYER_SPEED};
+use crate::state::GameState;
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -8,7 +10,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_player)
+        app.add_systems(OnEnter(GameState::Playing), spawn_player)
             .add_systems(Update, move_player);
     }
 }
@@ -25,7 +27,7 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             flip_y: false,
             color: Color::WHITE,
             rect: None,
-            custom_size: Some(Vec2::new(160.0, 120.5)),
+            custom_size: Some(PLAYER_SIZE),
             image: texture,
             image_mode: SpriteImageMode::Auto,
 
@@ -62,7 +64,7 @@ pub fn move_player(
             commands.spawn(spawn_bullet(pos));
         }
 
-        let speed = 300.0;
+        let speed = PLAYER_SPEED;
 
         transform.translation += direction * speed * time.delta_secs();
     }

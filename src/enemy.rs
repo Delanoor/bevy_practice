@@ -1,3 +1,4 @@
+use crate::constants::{ENEMY_SIZE, ENEMY_SPEED};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -29,12 +30,12 @@ pub fn spawn_enenemy_sprite(asset_server: Res<AssetServer>) -> Sprite {
     Sprite {
         image: texture,
         // color: Color::linear_rgb(1.0, 0.0, 0.0),
-        custom_size: Some(Vec2::new(66.9, 48.9)),
+        custom_size: Some(ENEMY_SIZE),
         ..default()
     }
 }
 pub fn move_enemies(mut query: Query<&mut Transform, With<Enemy>>, time: Res<Time>) {
     for mut transform in &mut query {
-        transform.translation.y -= 100.0 * time.delta_secs();
+        transform.translation.y -= ENEMY_SPEED * time.delta_secs();
     }
 }

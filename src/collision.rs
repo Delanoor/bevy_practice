@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::bullet::Bullet;
+use crate::constants::{BULLET_SIZE, ENEMY_SIZE};
 use crate::enemy::Enemy;
 use crate::score::Score;
 
@@ -21,8 +22,8 @@ pub fn bullet_enemy_collision(
     bullet_query: Query<(Entity, &Transform), With<Bullet>>,
     enemy_query: Query<(Entity, &Transform), With<Enemy>>,
 ) {
-    let bullet_size = Vec2::new(10.0, 30.0);
-    let enemy_size = Vec2::new(66.9, 48.9);
+    let bullet_size = BULLET_SIZE;
+    let enemy_size = ENEMY_SIZE;
 
     for (bullet_entity, bullet_tf) in &bullet_query {
         for (enemy_entity, enemy_tf) in &enemy_query {
