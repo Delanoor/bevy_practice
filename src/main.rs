@@ -9,7 +9,7 @@ mod player;
 mod score;
 mod state;
 
-use bullet::move_bullet;
+use bullet::move_bullets;
 use collision::bullet_enemy_collision;
 use enemy::{SpawnTimer, move_enemies, timed_enemy_spawner};
 use player::PlayerPlugin;
@@ -35,7 +35,7 @@ fn main() {
             (
                 move_enemies,
                 timed_enemy_spawner,
-                move_bullet,
+                move_bullets,
                 bullet_enemy_collision,
             ),
         )

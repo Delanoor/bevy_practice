@@ -1,4 +1,4 @@
-use crate::bullet::spawn_bullet;
+use crate::bullet::shoot_with_mouse;
 use crate::constants::{PLAYER_SIZE, PLAYER_SPEED};
 use crate::state::GameState;
 use bevy::prelude::*;
@@ -15,6 +15,10 @@ impl Plugin for PlayerPlugin {
             .add_systems(
                 Update,
                 rotate_player_to_mouse.run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(
+                Update,
+                shoot_with_mouse.run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -62,10 +66,10 @@ pub fn move_player(
         if keyboard_input.pressed(KeyCode::KeyF) || keyboard_input.pressed(KeyCode::ArrowRight) {
             direction.x += 1.0;
         }
-        if keyboard_input.just_pressed(KeyCode::Space) {
-            let pos = transform.translation;
-            commands.spawn(spawn_bullet(pos));
-        }
+        // if keyboard_input.just_pressed(KeyCode::Space) {
+        let pos = transform.translation;
+        // commands.spawn(spawn_bullet(pos));
+        // }
 
         let speed = PLAYER_SPEED;
 
@@ -73,26 +77,26 @@ pub fn move_player(
     }
 }
 
-pub fn move_player_to_mouse(
-    windows: Query<&Window>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    mut query: Query<&mut Transform, With<Player>>,
-) {
-    let Ok(mut player_tf) = query.single_mut() else {
-        return;
-    };
-    let Ok(window) = windows.single() else { return };
+// pub fn move_player_to_mouse(
+//     windows: Query<&Window>,
+//     camera_query: Query<(&Camera, &GlobalTransform)>,
+//     mut query: Query<&mut Transform, With<Player>>,
+// ) {
+//     let Ok(mut player_tf) = query.single_mut() else {
+//         return;
+//     };
+//     let Ok(window) = windows.single() else { return };
 
-    if let Some(cursor_pos) = window.cursor_position() {
-        let Ok((camera, camera_tf)) = camera_query.single() else {
-            return;
-        };
+//     if let Some(cursor_pos) = window.cursor_position() {
+//         let Ok((camera, camera_tf)) = camera_query.single() else {
+//             return;
+//         };
 
-        if let Ok(world_pos) = camera.viewport_to_world(camera_tf, cursor_pos) {
-            player_tf.translation = world_pos.origin;
-        }
-    }
-}
+//         if let Ok(world_pos) = camera.viewport_to_world(camera_tf, cursor_pos) {
+//             player_tf.translation = world_pos.origin;
+//         }
+//     }
+// }
 
 pub fn rotate_player_to_mouse(
     windows: Query<&Window>,
