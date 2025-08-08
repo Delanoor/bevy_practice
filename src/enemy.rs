@@ -39,3 +39,11 @@ pub fn move_enemies(mut query: Query<&mut Transform, With<Enemy>>, time: Res<Tim
         transform.translation.y -= ENEMY_SPEED * time.delta_secs();
     }
 }
+
+pub struct EnemyPlugin;
+impl Plugin for EnemyPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(SpawnTimer(Timer::from_seconds(1.5, TimerMode::Repeating)))
+            .add_systems(Update, (move_enemies, timed_enemy_spawner));
+    }
+}

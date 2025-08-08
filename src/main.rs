@@ -9,36 +9,40 @@ mod player;
 mod score;
 mod state;
 
-use bullet::move_bullets;
-use collision::bullet_enemy_collision;
-use enemy::{SpawnTimer, move_enemies, timed_enemy_spawner};
 use player::PlayerPlugin;
 use score::Score;
 use state::{GameState, check_player_hit};
 
 use crate::{
+    bullet::BulletPlugin,
+    collision::CollisionPlugin,
+    constants::{SCREEN_HEIGHT, SCREEN_WIDTH},
+    enemy::EnemyPlugin,
     gameover::{hide_game_over, restart_on_key, show_game_over},
     score::ScorePlugin,
 };
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugins(PlayerPlugin)
-        .add_plugins(ScorePlugin)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Bevy Shooter".into(),
+                resolution: (SCREEN_WIDTH, SCREEN_HEIGHT).into(),
+                resizable: false,
+                ..default()
+            }),
+            ..default()
+        }))
+        .add_plugins((
+            PlayerPlugin,
+            ScorePlugin,
+            BulletPlugin,
+            EnemyPlugin,
+            CollisionPlugin,
+        ))
         .insert_state(GameState::Playing)
-        .insert_resource(SpawnTimer(Timer::from_seconds(1.5, TimerMode::Repeating)))
         .insert_resource(Score(0))
         .add_systems(Startup, setup)
-        .add_systems(
-            Update,
-            (
-                move_enemies,
-                timed_enemy_spawner,
-                move_bullets,
-                bullet_enemy_collision,
-            ),
-        )
         .add_systems(
             Update,
             check_player_hit.run_if(in_state(GameState::Playing)),

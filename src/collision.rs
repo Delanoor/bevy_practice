@@ -4,6 +4,7 @@ use crate::bullet::Bullet;
 use crate::constants::{BULLET_SIZE, ENEMY_SIZE};
 use crate::enemy::Enemy;
 use crate::score::Score;
+use crate::state::GameState;
 
 pub fn collide(a_pos: Vec3, a_size: Vec2, b_pos: Vec3, b_size: Vec2) -> bool {
     // AABB collision
@@ -39,5 +40,16 @@ pub fn bullet_enemy_collision(
                 break; // One bullet hits one enemy only
             }
         }
+    }
+}
+
+pub struct CollisionPlugin;
+
+impl Plugin for CollisionPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            bullet_enemy_collision.run_if(in_state(GameState::Playing)),
+        );
     }
 }

@@ -1,5 +1,9 @@
 use bevy::prelude::*;
 
+// Screen sizes
+pub const SCREEN_WIDTH: f32 = 900.0;
+pub const SCREEN_HEIGHT: f32 = 600.0;
+
 // Entity sizes for collision detection and sprite rendering
 pub const PLAYER_SIZE: Vec2 = Vec2::new(160.0, 120.5);
 pub const ENEMY_SIZE: Vec2 = Vec2::new(66.9, 48.9);
