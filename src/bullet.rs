@@ -1,6 +1,6 @@
 use crate::{
     constants::{SCREEN_HEIGHT, SCREEN_WIDTH},
-    player::Player,
+    player::{FireCooldown, Player},
     state::GameState,
 };
 use bevy::prelude::*;
@@ -13,25 +13,6 @@ pub struct BulletVelocity(pub Vec2);
 
 #[derive(Component)]
 pub struct BulletLifeTime(pub Timer);
-
-// pub fn move_bullet(mut query: Query<&mut Transform, With<Bullet>>, time: Res<Time>) {
-//     const BULLET_VELOCITY: f32 = 400.0;
-//     for mut transform in &mut query {
-//         transform.translation.y += BULLET_VELOCITY * time.delta_secs();
-//     }
-// }
-
-// pub fn spawn_bullet(pos: Vec3) -> (Sprite, Transform, Bullet) {
-//     (
-//         Sprite {
-//             color: Color::linear_rgb(0.5, 0.5, 0.5),
-//             custom_size: Some(Vec2::new(10.0, 10.0)),
-//             ..default()
-//         },
-//         Transform::from_translation(Vec3::new(pos.x, pos.y + 50.0, pos.z)),
-//         Bullet,
-//     )
-// }
 
 pub fn move_bullets(
     mut commands: Commands,
@@ -62,19 +43,39 @@ pub fn shoot_with_mouse(
     windows: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     player_query: Query<&Transform, With<Player>>,
+    mut cooldown_query: Query<&mut FireCooldown, With<Player>>,
 ) {
     if mouse.just_pressed(MouseButton::Left) {
+        println!("Mouse left click detected!");
+
         let Ok(player_tf) = player_query.single() else {
+            println!("No player found!");
             return;
         };
-        let Ok(window) = windows.single() else { return };
+        let Ok(window) = windows.single() else {
+            println!("No window found!");
+            return;
+        };
+        let Ok(mut cd) = cooldown_query.single_mut() else {
+            println!("No cooldown found!");
+            return;
+        };
+
+        // dbg!("cd.0.finished: {:?}", cd.0.finished());
+
+        // if !cd.0.finished() {
+        //     return;
+        // }
 
         if let Some(cursor_pos) = window.cursor_position() {
+            println!("Cursor position: {:?}", cursor_pos);
             let Ok((camera, camera_tf)) = camera_query.single() else {
+                println!("No camera found!");
                 return;
             };
 
             if let Ok(world_pos) = camera.viewport_to_world(camera_tf, cursor_pos) {
+                println!("World position: {:?}", world_pos.origin);
                 let direction = (world_pos.origin - player_tf.translation)
                     .xy()
                     .normalize_or_zero();
@@ -82,16 +83,26 @@ pub fn shoot_with_mouse(
 
                 commands.spawn((
                     Sprite {
-                        color: Color::linear_rgb(0.5, 0.5, 0.5),
+                        color: Color::linear_rgb(1.0, 1.0, 0.0),
                         custom_size: Some(Vec2::new(10.0, 10.0)),
                         ..default()
                     },
                     Transform::from_translation(player_tf.translation),
                     Bullet,
                     BulletVelocity(velocity),
-                    BulletLifeTime(Timer::from_seconds(0.2, TimerMode::Once)),
+                    BulletLifeTime(Timer::from_seconds(2.5, TimerMode::Once)),
                 ));
+
+                println!(
+                    "Bullet spawned at {:?} with velocity {:?}",
+                    player_tf.translation, velocity
+                );
+                cd.0.reset();
+            } else {
+                println!("Failed to convert viewport to world!");
             }
+        } else {
+            println!("No cursor position!");
         }
     }
 }
@@ -100,6 +111,10 @@ pub struct BulletPlugin;
 
 impl Plugin for BulletPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, move_bullets.run_if(in_state(GameState::Playing)));
+        app.add_systems(Update, move_bullets.run_if(in_state(GameState::Playing)))
+            .add_systems(
+                Update,
+                shoot_with_mouse.run_if(in_state(GameState::Playing)),
+            );
     }
 }

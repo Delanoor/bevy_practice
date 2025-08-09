@@ -1,4 +1,3 @@
-use crate::bullet::shoot_with_mouse;
 use crate::constants::{PLAYER_SIZE, PLAYER_SPEED};
 use crate::state::GameState;
 use bevy::prelude::*;
@@ -6,24 +5,55 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Resource)]
+pub struct FireConfig {
+    pub cooldown_secs: f32,
+}
+
+#[derive(Component)]
+pub struct FireCooldown(pub Timer);
+
+pub fn attach_fire_cooldown(
+    mut commands: Commands,
+    q: Query<Entity, With<Player>>,
+    cfg: Res<FireConfig>,
+) {
+    if let Ok(player) = q.single() {
+        commands
+            .entity(player)
+            .insert(FireCooldown(Timer::from_seconds(
+                cfg.cooldown_secs,
+                TimerMode::Once,
+            )));
+    }
+}
+
+pub fn tick_fire_cooldown(time: Res<Time>, mut q: Query<&mut FireCooldown, With<Player>>) {
+    if let Ok(mut cd) = q.single_mut() {
+        cd.0.tick(time.delta());
+    }
+}
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), spawn_player)
-            .add_systems(Update, move_player)
-            .add_systems(
-                Update,
-                rotate_player_to_mouse.run_if(in_state(GameState::Playing)),
-            )
-            .add_systems(
-                Update,
-                shoot_with_mouse.run_if(in_state(GameState::Playing)),
-            );
+        app.insert_resource(FireConfig {
+            cooldown_secs: 0.25,
+        })
+        .add_systems(OnEnter(GameState::Playing), spawn_player)
+        .add_systems(Update, move_player)
+        .add_systems(
+            Update,
+            rotate_player_to_mouse.run_if(in_state(GameState::Playing)),
+        )
+        .add_systems(
+            Update,
+            tick_fire_cooldown.run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
-pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, cfg: Res<FireConfig>) {
     // Spawn camera
 
     let texture = asset_server.load("main_sc.png");
@@ -42,12 +72,12 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         Transform::from_xyz(0.0, -200.0, 0.0),
         Player,
+        FireCooldown(Timer::from_seconds(cfg.cooldown_secs, TimerMode::Once)),
     ));
 }
 
 pub fn move_player(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut commands: Commands,
     mut query: Query<&mut Transform, With<Player>>,
     time: Res<Time>,
 ) {
@@ -66,10 +96,6 @@ pub fn move_player(
         if keyboard_input.pressed(KeyCode::KeyF) || keyboard_input.pressed(KeyCode::ArrowRight) {
             direction.x += 1.0;
         }
-        // if keyboard_input.just_pressed(KeyCode::Space) {
-        let pos = transform.translation;
-        // commands.spawn(spawn_bullet(pos));
-        // }
 
         let speed = PLAYER_SPEED;
 

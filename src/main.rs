@@ -8,6 +8,7 @@ mod gameover;
 mod player;
 mod score;
 mod state;
+mod ui_cooldown;
 
 use player::PlayerPlugin;
 use score::Score;
@@ -20,6 +21,7 @@ use crate::{
     enemy::EnemyPlugin,
     gameover::{hide_game_over, restart_on_key, show_game_over},
     score::ScorePlugin,
+    ui_cooldown::CooldownUiPlugin,
 };
 
 fn main() {
@@ -39,6 +41,7 @@ fn main() {
             BulletPlugin,
             EnemyPlugin,
             CollisionPlugin,
+            CooldownUiPlugin,
         ))
         .insert_state(GameState::Playing)
         .insert_resource(Score(0))
