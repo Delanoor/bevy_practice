@@ -69,3 +69,13 @@ pub fn restart_on_key(
         state.set(GameState::Playing);
     }
 }
+
+pub struct GameOverPlugin;
+
+impl Plugin for GameOverPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(GameState::GameOver), show_game_over)
+            .add_systems(OnExit(GameState::GameOver), hide_game_over)
+            .add_systems(Update, restart_on_key.run_if(in_state(GameState::GameOver)));
+    }
+}

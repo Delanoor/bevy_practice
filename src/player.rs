@@ -1,4 +1,6 @@
-use crate::constants::{PLAYER_SIZE, PLAYER_SPEED};
+use crate::collision::collide;
+use crate::constants::{ENEMY_SIZE, PLAYER_SIZE, PLAYER_SPEED};
+use crate::enemy::Enemy;
 use crate::state::GameState;
 use bevy::prelude::*;
 
@@ -13,20 +15,20 @@ pub struct FireConfig {
 #[derive(Component)]
 pub struct FireCooldown(pub Timer);
 
-pub fn attach_fire_cooldown(
-    mut commands: Commands,
-    q: Query<Entity, With<Player>>,
-    cfg: Res<FireConfig>,
-) {
-    if let Ok(player) = q.single() {
-        commands
-            .entity(player)
-            .insert(FireCooldown(Timer::from_seconds(
-                cfg.cooldown_secs,
-                TimerMode::Once,
-            )));
-    }
-}
+// pub fn attach_fire_cooldown(
+//     mut commands: Commands,
+//     q: Query<Entity, With<Player>>,
+//     cfg: Res<FireConfig>,
+// ) {
+//     if let Ok(player) = q.single() {
+//         commands
+//             .entity(player)
+//             .insert(FireCooldown(Timer::from_seconds(
+//                 cfg.cooldown_secs,
+//                 TimerMode::Once,
+//             )));
+//     }
+// }
 
 pub fn tick_fire_cooldown(time: Res<Time>, mut q: Query<&mut FireCooldown, With<Player>>) {
     if let Ok(mut cd) = q.single_mut() {
@@ -41,7 +43,13 @@ impl Plugin for PlayerPlugin {
             cooldown_secs: 0.25,
         })
         .add_systems(OnEnter(GameState::Playing), spawn_player)
-        .add_systems(Update, move_player)
+        .add_systems(
+            Update,
+            (
+                move_player,
+                check_player_hit.run_if(in_state(GameState::Playing)),
+            ),
+        )
         .add_systems(
             Update,
             rotate_player_to_mouse.run_if(in_state(GameState::Playing)),
@@ -100,6 +108,25 @@ pub fn move_player(
         let speed = PLAYER_SPEED;
 
         transform.translation += direction * speed * time.delta_secs();
+    }
+}
+
+pub fn check_player_hit(
+    mut next_state: ResMut<NextState<GameState>>,
+    enemy_query: Query<&Transform, With<Enemy>>,
+    mut player_query: Query<(&Transform, &mut Sprite), With<Player>>,
+) {
+    if let Ok((player_tf, mut sprite)) = player_query.single_mut() {
+        let player_pos = player_tf.translation;
+
+        for enemy in &enemy_query {
+            if collide(enemy.translation, ENEMY_SIZE, player_pos, PLAYER_SIZE) {
+                next_state.set(GameState::GameOver);
+                sprite.color = Color::linear_rgb(0.0, 0.0, 0.0);
+                dbg!("GAME OVER");
+                break;
+            }
+        }
     }
 }
 

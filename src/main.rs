@@ -12,14 +12,14 @@ mod ui_cooldown;
 
 use player::PlayerPlugin;
 use score::Score;
-use state::{GameState, check_player_hit};
+use state::GameState;
 
 use crate::{
     bullet::BulletPlugin,
     collision::CollisionPlugin,
     constants::{SCREEN_HEIGHT, SCREEN_WIDTH},
     enemy::EnemyPlugin,
-    gameover::{hide_game_over, restart_on_key, show_game_over},
+    gameover::GameOverPlugin,
     score::ScorePlugin,
     ui_cooldown::CooldownUiPlugin,
 };
@@ -42,17 +42,11 @@ fn main() {
             EnemyPlugin,
             CollisionPlugin,
             CooldownUiPlugin,
+            GameOverPlugin,
         ))
         .insert_state(GameState::Playing)
         .insert_resource(Score(0))
         .add_systems(Startup, setup)
-        .add_systems(
-            Update,
-            check_player_hit.run_if(in_state(GameState::Playing)),
-        )
-        .add_systems(OnEnter(GameState::GameOver), show_game_over)
-        .add_systems(OnExit(GameState::GameOver), hide_game_over)
-        .add_systems(Update, restart_on_key.run_if(in_state(GameState::GameOver)))
         .run();
 }
 

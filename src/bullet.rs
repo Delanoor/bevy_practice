@@ -63,9 +63,9 @@ pub fn shoot_with_mouse(
 
         // dbg!("cd.0.finished: {:?}", cd.0.finished());
 
-        // if !cd.0.finished() {
-        //     return;
-        // }
+        if !cd.0.finished() {
+            return;
+        }
 
         if let Some(cursor_pos) = window.cursor_position() {
             println!("Cursor position: {:?}", cursor_pos);
